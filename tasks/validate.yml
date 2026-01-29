@@ -1,0 +1,35 @@
+---
+- name: Assert dotfiles_repo is defined and non-empty
+  ansible.builtin.assert:
+    that:
+      - dotfiles_repo is defined
+      - dotfiles_repo | length > 0
+    fail_msg: "dotfiles_repo must be defined and non-empty"
+    quiet: true
+
+- name: Assert dotfiles_files is a list
+  ansible.builtin.assert:
+    that:
+      - dotfiles_files is defined
+      - dotfiles_files is iterable
+      - dotfiles_files is not string
+      - dotfiles_files is not mapping
+    fail_msg: "dotfiles_files must be a list"
+    quiet: true
+
+- name: Assert each dotfile entry has src and dest
+  ansible.builtin.assert:
+    that:
+      - item.src is defined
+      - item.src | length > 0
+      - item.dest is defined
+      - item.dest | length > 0
+    fail_msg: >-
+      Each dotfile entry must have 'src' and 'dest'
+      defined (failed on: {{ item }})
+    quiet: true
+  loop: "{{ dotfiles_files }}"
+  loop_control:
+    label: >-
+      {{ item.src | default('undefined') }}
+      -> {{ item.dest | default('undefined') }}

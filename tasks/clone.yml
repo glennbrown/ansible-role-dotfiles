@@ -1,0 +1,16 @@
+---
+- name: Clone or update dotfiles repository
+  block:
+    - name: Clone dotfiles git repository
+      ansible.builtin.git:
+        repo: "{{ dotfiles_repo }}"
+        dest: "{{ dotfiles_repo_dest }}"
+        version: "{{ dotfiles_repo_version }}"
+        accept_hostkey: "{{ dotfiles_repo_accept_hostkey }}"
+  rescue:
+    - name: Fail with clone error details
+      ansible.builtin.fail:
+        msg: >-
+          Failed to clone dotfiles repository '{{ dotfiles_repo }}'
+          to '{{ dotfiles_repo_dest }}'.
+          Ensure the repository URL is correct and accessible.

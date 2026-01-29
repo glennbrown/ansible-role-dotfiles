@@ -1,0 +1,42 @@
+---
+# Determine whether the src contains a glob pattern.
+# If so, expand it and deploy each matched file individually.
+# Otherwise, deploy the single entry directly.
+
+- name: Check if src contains a glob pattern
+  ansible.builtin.set_fact:
+    _dotfile_is_glob: >-
+      {{ dotfile_entry.src is search('[*?[\]]') }}
+
+- name: Expand glob pattern
+  when: _dotfile_is_glob | bool
+  block:
+    - name: Find files matching glob pattern
+      ansible.builtin.find:
+        paths: "{{ dotfiles_repo_dest }}/{{ dotfile_entry.src | dirname }}"
+        patterns: "{{ dotfile_entry.src | basename }}"
+        file_type: any
+      register: _dotfile_glob_results
+
+    - name: Deploy each matched file
+      ansible.builtin.include_tasks: deploy_file.yml
+      loop: "{{ _dotfile_glob_results.files | map(attribute='path') }}"
+      loop_control:
+        loop_var: _dotfile_matched_path
+        label: "{{ _dotfile_matched_path | basename }}"
+      vars:
+        _resolved_src: "{{ _dotfile_matched_path }}"
+        _resolved_dest: >-
+          {{
+            dotfile_entry.dest + '/' + _dotfile_matched_path | basename
+            if not dotfile_entry.dest is match('^/')
+            else dotfile_entry.dest + '/' + _dotfile_matched_path | basename
+          }}
+
+- name: Deploy single file entry
+  ansible.builtin.include_tasks: deploy_file.yml
+  when: not (_dotfile_is_glob | bool)
+  vars:
+    _resolved_src: >-
+      {{ dotfiles_repo_dest }}/{{ dotfile_entry.src }}
+    _resolved_dest: "{{ dotfile_entry.dest }}"

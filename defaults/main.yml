@@ -1,0 +1,31 @@
+---
+# Git repository containing dotfiles
+dotfiles_repo: ""
+dotfiles_repo_version: "main"
+dotfiles_repo_dest: "{{ ansible_env.HOME }}/.dotfiles"
+dotfiles_repo_accept_hostkey: true
+
+# Base path for symlink/copy destinations
+dotfiles_dest_base: "{{ ansible_env.HOME }}"
+
+# Default handling
+dotfiles_state: "link"
+dotfiles_owner: "{{ ansible_user_id }}"
+dotfiles_group: "{{ ansible_user_gid }}"
+dotfiles_mode: "0644"
+dotfiles_dir_mode: "0755"
+
+# List of dotfile entries
+# Each entry requires 'src' and 'dest'.
+# Optional per-entry overrides: state, owner, group, mode.
+#
+# Example:
+#   dotfiles_files:
+#     - src: "gitconfig"
+#       dest: ".gitconfig"
+#     - src: "config/nvim"
+#       dest: ".config/nvim"
+#       state: "link"
+#     - src: "bin/*.sh"
+#       dest: "bin"
+dotfiles_files: []

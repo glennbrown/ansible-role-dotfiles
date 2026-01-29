@@ -1,0 +1,9 @@
+---
+- name: Validate dotfiles configuration
+  ansible.builtin.include_tasks: validate.yml
+
+- name: Clone dotfiles repository
+  ansible.builtin.include_tasks: clone.yml
+
+- name: Deploy dotfiles
+  ansible.builtin.include_tasks: deploy.yml

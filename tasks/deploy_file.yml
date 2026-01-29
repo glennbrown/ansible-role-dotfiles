@@ -1,0 +1,63 @@
+---
+- name: Deploy resolved dotfile
+  vars:
+    _dotfile_src: "{{ _resolved_src | trim }}"
+    _dotfile_dest: >-
+      {{
+        _resolved_dest | trim
+        if (_resolved_dest | trim) is match('^/')
+        else dotfiles_dest_base + '/' + (_resolved_dest | trim)
+      }}
+    _dotfile_state: >-
+      {{ dotfile_entry.state | default(dotfiles_state) }}
+    _dotfile_owner: >-
+      {{ dotfile_entry.owner | default(dotfiles_owner) }}
+    _dotfile_group: >-
+      {{ dotfile_entry.group | default(dotfiles_group) }}
+    _dotfile_mode: >-
+      {{ dotfile_entry.mode | default(dotfiles_mode) }}
+  block:
+    - name: Ensure parent directory exists
+      ansible.builtin.file:
+        path: "{{ _dotfile_dest | dirname }}"
+        state: directory
+        owner: "{{ _dotfile_owner }}"
+        group: "{{ _dotfile_group }}"
+        mode: "{{ dotfiles_dir_mode }}"
+
+    - name: Create symlink
+      ansible.builtin.file:
+        src: "{{ _dotfile_src }}"
+        dest: "{{ _dotfile_dest }}"
+        state: link
+        owner: "{{ _dotfile_owner }}"
+        group: "{{ _dotfile_group }}"
+        force: true
+      when: _dotfile_state | trim == "link"
+
+    - name: Copy file
+      ansible.builtin.copy:
+        src: "{{ _dotfile_src }}"
+        dest: "{{ _dotfile_dest }}"
+        owner: "{{ _dotfile_owner }}"
+        group: "{{ _dotfile_group }}"
+        mode: "{{ _dotfile_mode }}"
+        remote_src: true
+      when: _dotfile_state | trim == "copy"
+
+    - name: Template file
+      ansible.builtin.template:
+        src: "{{ _dotfile_src }}"
+        dest: "{{ _dotfile_dest }}"
+        owner: "{{ _dotfile_owner }}"
+        group: "{{ _dotfile_group }}"
+        mode: "{{ _dotfile_mode }}"
+      when: _dotfile_state | trim == "template"
+
+  rescue:
+    - name: Report deployment failure
+      ansible.builtin.fail:
+        msg: >-
+          Failed to deploy dotfile '{{ _dotfile_src }}'
+          to '{{ _dotfile_dest }}'
+          with state '{{ _dotfile_state | trim }}'.

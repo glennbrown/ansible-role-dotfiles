@@ -1,0 +1,7 @@
+---
+- name: Deploy dotfiles
+  ansible.builtin.include_tasks: deploy_entry.yml
+  loop: "{{ dotfiles_files }}"
+  loop_control:
+    loop_var: dotfile_entry
+    label: "{{ dotfile_entry.src }} -> {{ dotfile_entry.dest }}"
